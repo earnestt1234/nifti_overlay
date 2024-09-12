@@ -144,19 +144,20 @@ class NiftiOverlay:
 
     def _main_plot_loop(self):
         self.prev_shape = None
-        for n, image in enumerate(self.images):
-            self._plot_image(n, image)
+        total = len(self.images)
+        for index, image in enumerate(self.images):
+            self._plot_image(image, index, total)
 
-    def _plot_image(self, index, image):
+    def _plot_image(self, image, index, total):
 
         n = index
 
         self.print()
         self.print( "--------------------------------------------------")
-        self.print(f"IMAGE {n}")
+        self.print(f"IMAGE {n+1} / {total}")
         self.print( "--------------------------------------------------")
 
-        self.check_mismatched_dimensions(image)
+        self._check_mismatched_dimensions(image)
 
         self.print()
         self.print(f"Image path: {image.path}")
@@ -164,6 +165,7 @@ class NiftiOverlay:
         self.print(f"Image type: {image.__class__.__name__}")
 
         data = image.data
+        total_panels = self.nrows * self.ncols
 
         for i, p in enumerate(self.planes):
             dimension = self.planes_to_idx[p]
@@ -191,8 +193,10 @@ class NiftiOverlay:
 
                 panel_args = {'dimension': dimension, 'position': position, 'ax': ax}
 
+                percentage = round(((i * len(indices) + j) / total_panels) * 100, 2)
+
                 self.print()
-                self.print(f'Plotting panel [{i}, {j}]')
+                self.print(f'Plotting panel [{i}, {j}] ({percentage}%)')
                 self.print("Call:")
                 for k, v in panel_args.items():
                     self.print(f"  {k}: {v}")

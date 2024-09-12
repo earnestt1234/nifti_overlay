@@ -22,7 +22,7 @@ class Image(ABC):
 
     @property
     def shape(self):
-        return self.nifti.get_data_shape()
+        return self.nifti.header.get_data_shape()
 
     @abstractmethod
     def plot_slice(self, dimension, position, ax=None, **kwargs):
@@ -36,10 +36,10 @@ class Anatomy(Image):
         super().__init__(path)
         self.colormap = colormap
         self.alpha = alpha
-        self.scale_panel = False
-        self.drop_zero = False
-        self.vmin = None
-        self.vmax = None
+        self.scale_panel = scale_panel
+        self.drop_zero = drop_zero
+        self.vmin = vmin
+        self.vmax = vmax
 
     def plot_slice(self, dimension, position, ax=None, **kwargs):
         data = self.data.copy()
@@ -57,15 +57,15 @@ class Anatomy(Image):
         if self.vmin:
             vmin = self.vmin
         else:
-            vmin = xsect.min() if self.scale_panel else self.vmin
+            vmin = xsect.min() if self.scale_panel else data.min()
 
         if self.vmax:
             vmax = self.vmax
         else:
-            vmax = xsect.max() if self.scale_panel else self.vmax
+            vmax = xsect.max() if self.scale_panel else data.max()
 
         # plot
-        ax.imshow(xsect, cmap=self.cmap, aspect='auto', vmin=vmin, vmax=vmax, **kwargs)
+        ax.imshow(xsect, cmap=self.colormap, aspect='auto', vmin=vmin, vmax=vmax, **kwargs)
 
 class Mask(Image):
 

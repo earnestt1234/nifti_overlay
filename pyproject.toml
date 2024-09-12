@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "nifti_overlay"
+description = "A program for creating tiled images of volumetric neuorimaging data."
+dependencies = [
+    "matplotlib >= 3.2",
+    "nibabel >= 3.2",
+    "numpy >= 1.2"
+]
+dynamic = ["version"]
+requires-python = ">= 3.7"
+authors =[
+    {name = "Tom Earnest", email = "earnestt1234@gmail.com"}
+]
+readme = "README.md"
+license = {text = "MIT"}
+
+[project.urls]
+Homepage = "https://github.com/earnestt1234/nifti_overlay"
