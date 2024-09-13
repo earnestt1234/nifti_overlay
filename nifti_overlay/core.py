@@ -12,7 +12,7 @@ import os
 import matplotlib.pyplot as plt
 import numpy as np
 
-from .image import Anatomy, Mask
+from nifti_overlay.image import Anatomy, Mask
 
 class NiftiOverlay:
 
@@ -50,6 +50,7 @@ class NiftiOverlay:
         self.color_cycle = cycle(plt.rcParams['axes.prop_cycle'].by_key()['color'])
         self.print = print if self.verbose else lambda *args, **kwargs: None
         self.prev_shape = None
+        self.automatic_figsize_scale = 1.0
 
     @property
     def nrows(self):
@@ -58,14 +59,6 @@ class NiftiOverlay:
     @property
     def ncols(self):
         return  self.nslices if not self.transpose else len(self.planes)
-
-    @property
-    def figx(self):
-        return self.ncols * 2 if self.figsize == 'automatic' else self.figsize[0]
-
-    @property
-    def figy(self):
-        return self.nrows * 2 if self.figsize == 'automatic' else self.figsize[1]
 
     @property
     def paddings(self):
@@ -120,15 +113,28 @@ class NiftiOverlay:
                              f"plotted dimensions {self.prev_shape}")
         self.prev_shape = shape
 
+    def _get_figure_dimensions(self):
+        if self.figsize == 'automatic':
+            figx, figy = self.ncols, self.nrows
+            figx *= self.automatic_figsize_scale
+            figy *= self.automatic_figsize_scale
+        else:
+            figx, figy = self.figsize
+
+        return figx, figy
+
     def _init_figure(self):
+
+        figx, figy = self._get_figure_dimensions()
+
         self.print()
         self.print("Initializing figure:")
         self.print(f"  Shape: {self.nrows}, {self.ncols}")
-        self.print(f"  Size: {self.figx} in., {self.figy} in.")
+        self.print(f"  Size: {figx} in., {figy} in.")
         self.print(f"  DPI: {self.dpi}")
 
         self.fig, self.axes = None, None
-        self.fig, self.axes = plt.subplots(self.nrows, self.ncols, figsize=(self.figx, self.figy), dpi=self.dpi)
+        self.fig, self.axes = plt.subplots(self.nrows, self.ncols, figsize=(figx, figy), dpi=self.dpi)
         self.fig.subplots_adjust(0,0,1,1,0,0)
         self.fig.patch.set_facecolor(self.background)
 
@@ -213,6 +219,9 @@ class NiftiOverlay:
                 ax.set_aspect(1)
                 ax.axis('off')
                 ax.set_facecolor(self.background)
+
+        self.print()
+        self.print("Finished.")
 
         self.print()
         self.print("--------------------------------------------------")

@@ -31,11 +31,11 @@ class Image(ABC):
 
 class Anatomy(Image):
 
-    def __init__(self, path, colormap='gist_gray', alpha=1,
+    def __init__(self, path, color='gist_gray', alpha=1,
                  scale_panel=False, drop_zero=False, vmin=None,
                  vmax=None):
         super().__init__(path)
-        self.colormap = colormap
+        self.color = color
         self.alpha = alpha
         self.scale_panel = scale_panel
         self.drop_zero = drop_zero
@@ -66,7 +66,7 @@ class Anatomy(Image):
             vmax = xsect.max() if self.scale_panel else data.max()
 
         # plot
-        ax.imshow(xsect, cmap=self.colormap,
+        ax.imshow(xsect, cmap=self.color,
                   aspect='auto', vmin=vmin, vmax=vmax,
                   alpha=self.alpha, **kwargs)
 

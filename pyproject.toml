@@ -20,3 +20,6 @@ license = {text = "MIT"}
 
 [project.urls]
 Homepage = "https://github.com/earnestt1234/nifti_overlay"
+
+[project.scripts]
+nifti_overlay = "nifti_overlay.__main__:main"

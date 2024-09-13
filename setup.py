@@ -28,4 +28,7 @@ setup(name='nifti_overlay',
       packages=['nifti_overlay'],
       install_requires=dependencies,
       long_description=long_description,
-      long_description_content_type='text/markdown')
+      long_description_content_type='text/markdown',
+      entry_points = {
+        'console_scripts': ['nifti_overlay=nifti_overlay.__main__:main'],
+        })
