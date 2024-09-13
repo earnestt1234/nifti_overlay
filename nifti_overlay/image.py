@@ -9,6 +9,7 @@ Created on Thu Sep 12 15:16:34 2024
 from abc import ABC, abstractmethod
 
 import nibabel as nib
+import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -65,7 +66,9 @@ class Anatomy(Image):
             vmax = xsect.max() if self.scale_panel else data.max()
 
         # plot
-        ax.imshow(xsect, cmap=self.colormap, aspect='auto', vmin=vmin, vmax=vmax, **kwargs)
+        ax.imshow(xsect, cmap=self.colormap,
+                  aspect='auto', vmin=vmin, vmax=vmax,
+                  alpha=self.alpha, **kwargs)
 
 class Mask(Image):
 
@@ -74,3 +77,24 @@ class Mask(Image):
         self.color = color
         self.alpha = alpha
         self.mask_value = mask_value
+
+    def plot_slice(self, dimension, position, ax=None, _override_color=None, **kwargs):
+
+        if ax is None:
+            ax = plt.gca()
+
+        if self.color is None and _override_color is None:
+            raise ValueError('Either color attribute must be set, '
+                             'or `_override_color` must be provided.')
+
+        color = _override_color if _override_color else self.color
+
+        data = np.where(self.data == self.mask_value, 1, np.nan)
+        data = np.ma.array(data, mask=np.isnan(data))
+
+        cmap = matplotlib.colors.ListedColormap(['black', color])
+        bounds=[0,.5,2]
+        norm = matplotlib.colors.BoundaryNorm(bounds, cmap.N)
+
+        xsect = np.rot90(np.take(data, indices=position, axis=dimension))
+        ax.imshow(xsect, cmap=cmap, norm=norm, aspect='auto', alpha=self.alpha, **kwargs)

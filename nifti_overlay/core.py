@@ -6,6 +6,9 @@ Created on Thu Sep 12 15:00:05 2024
 @author: earnestt1234
 """
 
+from itertools import cycle
+import os
+
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -44,7 +47,7 @@ class NiftiOverlay:
 
         # other variables
         self.planes_to_idx = {'x': 0, 'y': 1, 'z': 2}
-        self.color_cycle = plt.rcParams['axes.prop_cycle'].by_key()['color']
+        self.color_cycle = cycle(plt.rcParams['axes.prop_cycle'].by_key()['color'])
         self.print = print if self.verbose else lambda *args, **kwargs: None
         self.prev_shape = None
 
@@ -166,6 +169,9 @@ class NiftiOverlay:
 
         data = image.data
         total_panels = self.nrows * self.ncols
+        mask_color = None
+        if isinstance(image, Mask) and image.color is None:
+            mask_color = next(self.color_cycle)
 
         for i, p in enumerate(self.planes):
             dimension = self.planes_to_idx[p]
@@ -201,6 +207,8 @@ class NiftiOverlay:
                 for k, v in panel_args.items():
                     self.print(f"  {k}: {v}")
 
+                if mask_color is not None:
+                    panel_args['_override_color'] = mask_color
                 image.plot_slice(**panel_args)
                 ax.set_aspect(1)
                 ax.axis('off')
@@ -211,13 +219,28 @@ class NiftiOverlay:
         self.print()
         self.print("--------------------------------------------------")
 
-    def plot(self, ):
+    def plot(self):
         self._check_images()
         self._init_figure()
         self._main_plot_loop()
+        return self.fig
 
-    def save(output):
-        pass
+    def generate(self, savepath, separate=False, rerun=True):
 
-    def show():
-        pass
+        if self.fig is None or rerun:
+            self.plot()
+
+        if not separate:
+            self.print(f"Saving output to {savepath}...")
+            self.fig.savefig(savepath, facecolor=self.background)
+            return
+
+        if not os.path.isdir(savepath):
+            os.mkdir(savepath)
+        for r in range(self.nrows):
+            for c in range(self.ncols):
+                ax = self.axes[r, c]
+                extent = ax.get_window_extent().transformed(self.fig.dpi_scale_trans.inverted())
+                impath = os.path.join(savepath, f"panel_{r}x{c}.png")
+                self.print(f"Saving panel at {impath}...")
+                self.fig.savefig(impath, bbox_inches=extent, facecolor=self.background)
