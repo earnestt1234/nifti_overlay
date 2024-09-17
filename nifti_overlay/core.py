@@ -13,13 +13,17 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from nifti_overlay.image import Anatomy, Mask
+from nifti_overlay.checkerboard import plot_checkerboard
 
 class NiftiOverlay:
 
     def __init__(self, planes='xyz', nslices=7, transpose=False, min_all=None,
                  max_all=None, minx=0.15, maxx=0.85, miny=0.15, maxy=0.85,
                  minz=0.15, maxz=0.85, background='black',
-                 figsize='automatic', dpi=200, verbose=False):
+                 figsize='automatic', dpi=200, checkerboard=False,
+                 checkerboard_color='gist_gray', checkerboard_boxes=10,
+                 checkerboard_normalize=True, checkerboard_matching=True,
+                 verbose=False):
 
         # user-supplied attributes
         self.planes = planes
@@ -37,6 +41,11 @@ class NiftiOverlay:
         self.figsize = figsize
         self.dpi = dpi
         self.verbose = verbose
+        self.checkerboard = checkerboard
+        self.checkerboard_color = checkerboard_color
+        self.checkerboard_normalize = checkerboard_normalize
+        self.checkerboard_matching = checkerboard_matching
+        self.checkerboard_boxes = checkerboard_boxes
 
         # matplotlib stuff
         self.figure = None
@@ -49,7 +58,6 @@ class NiftiOverlay:
         self.planes_to_idx = {'x': 0, 'y': 1, 'z': 2}
         self.color_cycle = cycle(plt.rcParams['axes.prop_cycle'].by_key()['color'])
         self.print = print if self.verbose else lambda *args, **kwargs: None
-        self.prev_shape = None
         self.automatic_figsize_scale = 1.0
 
     @property
@@ -104,14 +112,65 @@ class NiftiOverlay:
                                'NiftiOverlay().add_anat() or NiftiOverlay.add_mask() '
                                'to add images to be plotted')
 
-    def _check_mismatched_dimensions(self, image):
-        # check for mismatched dimensions
-        shape = image.nifti.header.get_data_shape()
-        shapex, shapey, shapez = shape
-        if self.prev_shape and shape != self.prev_shape:
-            raise ValueError(f"DIMENSION ERROR.  New image dimensions {shape} do not equal previously "
-                             f"plotted dimensions {self.prev_shape}")
-        self.prev_shape = shape
+    def _check_mismatched_dimensions(self):
+        # no images added
+        if not self.images:
+            return None
+
+        # all same shape
+        shapes = [i.shape for i in self.images]
+        shapeset = set(shapes)
+        if len(shapeset) == 1:
+            return shapes[0]
+
+        # different shape
+        else:
+            raise ValueError(f"DIMENSION ERROR.  Found different image dimensions for different images: {shapeset}")
+
+
+    def _checkerboard_loop(self):
+        total_panels = self.nrows * self.ncols
+        shape = self._check_mismatched_dimensions()
+        for i, p in enumerate(self.planes):
+            dimension = self.planes_to_idx[p]
+            dimension_size = shape[dimension]
+            min_window, max_window = self.paddings[p]
+            min_slice = int(min_window*dimension_size)
+            max_slice = int(max_window*dimension_size)
+            num = self.nrows if self.transpose else self.ncols
+
+            if num == 1:
+                indices = [int((max_slice + min_slice) / 2)]
+            else:
+                indices = np.linspace(min_slice, max_slice, num)
+
+            self.print()
+            self.print(f"Plotting row [{i}]")
+            self.print(f"Axis = '{p}'")
+            self.print(f"Minimum & Maximum extent: {min_window}, {max_window}")
+            self.print(f"Slices to plot along dimension (pre-rounding): {list(indices)}")
+
+            for j, idx in enumerate(indices):
+
+                ax = self.axes[i, j]
+                position = int(idx)
+
+                percentage = round(((i * len(indices) + j) / total_panels) * 100, 2)
+
+                self.print()
+                self.print(f'Plotting panel [{i}, {j}] ({percentage}%)')
+
+                plot_checkerboard(self.images,
+                                  dimension=dimension,
+                                  position=position,
+                                  boxes=self.checkerboard_boxes,
+                                  normalize=self.checkerboard_normalize,
+                                  histogram_matching=self.checkerboard_matching,
+                                  cmap=self.checkerboard_color,
+                                  ax=ax)
+                ax.set_aspect(1)
+                ax.axis('off')
+                ax.set_facecolor(self.background)
 
     def _get_figure_dimensions(self):
         if self.figsize == 'automatic':
@@ -152,7 +211,6 @@ class NiftiOverlay:
             self.axes = self.axes.T
 
     def _main_plot_loop(self):
-        self.prev_shape = None
         total = len(self.images)
         for index, image in enumerate(self.images):
             self._plot_image(image, index, total)
@@ -165,8 +223,6 @@ class NiftiOverlay:
         self.print( "--------------------------------------------------")
         self.print(f"IMAGE {n+1} / {total}")
         self.print( "--------------------------------------------------")
-
-        self._check_mismatched_dimensions(image)
 
         self.print()
         self.print(f"Image path: {image.path}")
@@ -230,8 +286,12 @@ class NiftiOverlay:
 
     def plot(self):
         self._check_images()
+        self._check_mismatched_dimensions()
         self._init_figure()
-        self._main_plot_loop()
+        if self.checkerboard:
+            self._checkerboard_loop()
+        else:
+            self._main_plot_loop()
         return self.fig
 
     def generate(self, savepath, separate=False, rerun=True):
