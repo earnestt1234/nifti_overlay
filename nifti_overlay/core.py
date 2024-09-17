@@ -84,10 +84,10 @@ class NiftiOverlay:
         return paddings
 
 
-    def add_anat(self, path, colormap='gist_gray', alpha=1,
+    def add_anat(self, path, color='gist_gray', alpha=1,
                  scale_panel=False, drop_zero=False, vmin=None,
                  vmax=None):
-        img = Anatomy(path=path, colormap=colormap, alpha=alpha,
+        img = Anatomy(path=path, color=color, alpha=alpha,
                       scale_panel=scale_panel, drop_zero=drop_zero,
                       vmin=vmin, vmax=vmax)
         self.images.append(img)

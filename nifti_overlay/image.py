@@ -29,6 +29,10 @@ class Image(ABC):
     def plot_slice(self, dimension, position, ax=None, **kwargs):
         ...
 
+    @abstractmethod
+    def get_slice(self, dimension, position):
+        ...
+
 class Anatomy(Image):
 
     def __init__(self, path, color='gist_gray', alpha=1,
@@ -42,17 +46,23 @@ class Anatomy(Image):
         self.vmin = vmin
         self.vmax = vmax
 
-    def plot_slice(self, dimension, position, ax=None, **kwargs):
-        data = self.data.copy()
-
-        if ax is None:
-            ax = plt.gca()
+    def get_slice(self, dimension, position):
+        data = self.data
 
         if self.drop_zero:
             data = np.where(data == 0, np.nan, data)
             data = np.ma.array(data, mask=np.isnan(data))
 
         xsect = np.rot90(np.take(data, indices=position, axis=dimension))
+        return xsect
+
+    def plot_slice(self, dimension, position, ax=None, **kwargs):
+        data = self.data.copy()
+
+        if ax is None:
+            ax = plt.gca()
+
+        xsect = self.get_slice(dimension, position)
 
         # set vmax/vmin
         if self.vmin:
@@ -78,6 +88,12 @@ class Mask(Image):
         self.alpha = alpha
         self.mask_value = mask_value
 
+    def get_slice(self, dimension, position):
+        data = np.where(self.data == self.mask_value, 1, np.nan)
+        data = np.ma.array(data, mask=np.isnan(data))
+        xsect = np.rot90(np.take(data, indices=position, axis=dimension))
+        return xsect
+
     def plot_slice(self, dimension, position, ax=None, _override_color=None, **kwargs):
 
         if ax is None:
@@ -89,12 +105,9 @@ class Mask(Image):
 
         color = _override_color if _override_color else self.color
 
-        data = np.where(self.data == self.mask_value, 1, np.nan)
-        data = np.ma.array(data, mask=np.isnan(data))
-
         cmap = matplotlib.colors.ListedColormap(['black', color])
         bounds=[0,.5,2]
         norm = matplotlib.colors.BoundaryNorm(bounds, cmap.N)
 
-        xsect = np.rot90(np.take(data, indices=position, axis=dimension))
+        xsect = self.get_slice(dimension, position)
         ax.imshow(xsect, cmap=cmap, norm=norm, aspect='auto', alpha=self.alpha, **kwargs)
