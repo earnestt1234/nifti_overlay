@@ -13,7 +13,7 @@ import matplotlib
 import matplotlib.pyplot as plt
 
 from nifti_overlay.core import NiftiOverlay
-from nifti_overlay.image import Anatomy, Mask
+from nifti_overlay.image import Anatomy, Edges, Mask
 from nifti_overlay.multiimage import CheckerBoard
 
 helptxt = """
@@ -33,10 +33,11 @@ for plotting one or more anatomical / mask images in an array of automatically
 determined slices.
 
 Example uses:
-    - Plotting an anatomical image.
-    - Plotting a mask over an anatomical image to verify overlap.
+    - Displaying an anatomical image.
+    - Showing a mask over an anatomical image.
     - Plotting the overlap of multiple masks.
-    - Plotting a checkerboard showing registration alignment
+    - Creating a checkerboard showing registration alignment.
+    - Displaying edges of one image overlaid on another.
 
 Requirments
 ~~~~~~~~~~~
@@ -80,6 +81,9 @@ Plot an image in the default layout of FSLEYES:
 Plot a checkerboard image:
     nifti_overlay -C registered.nii.gz moving.nii.gz
 
+Plot edges of a registered image over a template:
+    nifti_overlay -A template.nii.gz -E registered.nii.gz
+
 Arguments: Image Specific
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -95,6 +99,9 @@ IMAGES
 
     -C / --checker ANATOMY1, ANATOMY2, ...
         Paths to multiple images to checker together.
+
+    -E / EDGES
+        Path to an image to plot.  An edge detector is applied to create an edge image.
 
     -M / --mask MASK
         Path to a mask image to plot
@@ -131,6 +138,18 @@ IMAGE OPTIONS (CHECKERBOARD)
 
     --no-matching
         Omit histogram matching for setting similar intensities of all images.
+
+IMAGE OPTIONS (EDGES)
+
+    --sigma SIGMA
+        Standard deviation of Gaussian kernel for Canny edge detection.
+        Larger values result in less edges.
+        See https://scikit-image.org/docs/stable/api/skimage.feature.html#skimage.feature.canny.
+
+    --interpolation METHOD
+        Method for interpolating the edges when plotted.  Options and explanation
+        are given here, under the "interpolation" parameter:
+        https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.imshow.html
 
 IMAGE OPTIONS (MASK)
 
@@ -276,6 +295,7 @@ def parse(args=None):
     # TYPES
     parser.add_argument('-A', '--anat', action=StoreValueInOrder)
     parser.add_argument('-C', '--checker', action=StoreValueInOrder, nargs='+')
+    parser.add_argument('-E', '--edges', action=StoreValueInOrder)
     parser.add_argument('-M', '--mask', action=StoreValueInOrder)
 
     # IMAGE OPTIONS (ALL)
@@ -292,6 +312,10 @@ def parse(args=None):
     parser.add_argument('--boxes', action=StoreValueInOrder, type=int)
     parser.add_argument('--no-normalize', action=StoreFalseInOrder, dest='normalize')
     parser.add_argument('--no-matching', action=StoreFalseInOrder, dest='histogram_matching')
+
+    # IMAGE OPTIONS (EDGES)
+    parser.add_argument('--sigma', action=StoreValueInOrder, type=float)
+    parser.add_argument('--interpolation', action=StoreValueInOrder)
 
     # IMAGE OPTIONS (MASK)
     parser.add_argument('-m', '--maskvalue', action=StoreValueInOrder)
@@ -332,6 +356,8 @@ def parse_image_dict(d):
 
     if imtype == 'anat':
         return Anatomy(**d)
+    elif imtype == 'edges':
+        return Edges(**d)
     elif imtype == 'mask':
         return Mask(**d)
     elif imtype == 'checker':
@@ -343,7 +369,7 @@ def parse_image_dict(d):
 
 def parse_ordered_image_args(ordered_args):
 
-    image_flags = {'anat', 'checker', 'mask'}
+    image_flags = {'anat', 'checker', 'edges', 'mask'}
     current_image = None
     images = []
 
