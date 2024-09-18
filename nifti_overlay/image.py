@@ -12,6 +12,7 @@ import nibabel as nib
 import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
+from skimage import feature
 
 class Image(ABC):
 
@@ -84,6 +85,32 @@ class Anatomy(Image):
         ax.imshow(xsect, cmap=self.color,
                   aspect='auto', vmin=vmin, vmax=vmax,
                   alpha=self.alpha, **kwargs)
+
+class Edges(Image):
+
+    def __init__(self, path, color='yellow', alpha=1.0, sigma=1.0, interpolation='none'):
+        super().__init__(path)
+        self.color = color
+        self.alpha = alpha
+        self.sigma = sigma
+        self.interpolation = interpolation
+
+    def get_slice(self, dimension, position):
+        xsect = np.rot90(np.take(self.data, indices=position, axis=dimension))
+        edges = feature.canny(xsect, sigma=self.sigma)
+        return edges
+
+    def plot_slice(self, dimension, position, ax=None, **kwargs):
+
+        if ax is None:
+            ax = plt.gca()
+
+        edges = self.get_slice(dimension, position)
+        X = np.zeros(edges.shape + (4,))
+        rgba = matplotlib.colors.to_rgba(self.color, alpha=self.alpha)
+        X[edges] = rgba
+
+        ax.imshow(X, aspect='auto', alpha=self.alpha, interpolation=self.interpolation, **kwargs)
 
 class Mask(Image):
 

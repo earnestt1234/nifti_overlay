@@ -12,7 +12,7 @@ import os
 import matplotlib.pyplot as plt
 import numpy as np
 
-from nifti_overlay.image import Anatomy, Mask
+from nifti_overlay.image import Anatomy, Edges, Mask
 from nifti_overlay.multiimage import CheckerBoard, MultiImage
 
 class NiftiOverlay:
@@ -40,7 +40,7 @@ class NiftiOverlay:
         self.verbose = verbose
 
         # matplotlib stuff
-        self.figure = None
+        self.fig = None
         self.axes = None
 
         # holder for images to be plotted
@@ -98,6 +98,11 @@ class NiftiOverlay:
         img = CheckerBoard(paths=paths, boxes=boxes, color=color,
                            alpha=alpha, normalize=normalize,
                            histogram_matching=histogram_matching)
+        self.images.append(img)
+        return img
+
+    def add_edges(self, path, color='yellow', alpha=1.0, sigma=1.0):
+        img = Edges(path=path, color=color, alpha=alpha, sigma=sigma)
         self.images.append(img)
         return img
 
