@@ -14,6 +14,7 @@ import matplotlib.pyplot as plt
 
 from nifti_overlay.core import NiftiOverlay
 from nifti_overlay.image import Anatomy, Mask
+from nifti_overlay.multiimage import CheckerBoard
 
 helptxt = """
 ------------------------
@@ -43,6 +44,7 @@ Requirments
         - matplotlib >= 3.2
         - nibabel >= 3.2
         - numpy >= 1.2
+        - scikit-image >= 0.24.0
     - Inputs must be 3D NIFTI
     - Inputs have same dimension
     - Inputs do not have to have same orientation, but unexpected results may occur.
@@ -51,7 +53,11 @@ Usage
 ~~~~~
 
 General:
-    nifti_overlay ([-A anatomy] [anatomy options]) ([-M] [mask options]) [global options]
+    nifti_overlay \\
+        ([-A anatomy] [anatomy options])\\
+        ([-M] [mask options]) \\
+        ([-C] [checker options]) \\
+        [global options]
 
 Plot an anatomical image:
     nifti_overlay -A t1.nii.gz -o my_img.png
@@ -71,6 +77,9 @@ Plot a PET image over a T1:
 Plot an image in the default layout of FSLEYES:
     nifti_overlay -A img.nii.gz -T -n 1 -o my_img.png
 
+Plot a checkerboard image:
+    nifti_overlay -C registered.nii.gz moving.nii.gz
+
 Arguments: Image Specific
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -84,6 +93,9 @@ IMAGES
     -A / --anat ANATOMY
         Path to an anatomical image to plot
 
+    -C / --checker ANATOMY1, ANATOMY2, ...
+        Paths to multiple images to checker together.
+
     -M / --mask MASK
         Path to a mask image to plot
 
@@ -91,7 +103,7 @@ IMAGE OPTIONS (ALL)
 
     -c / --color COLOR
         Color for the image.
-            For an ANATOMY, this should be a matplotlib colormap (see https://matplotlib.org/3.5.1/tutorials/colors/colormaps.html)
+            For an ANATOMY and CHECKERBOARD, this should be a matplotlib colormap (see https://matplotlib.org/3.5.1/tutorials/colors/colormaps.html)
             For a MASK, this should be a color name (see https://matplotlib.org/stable/gallery/color/named_colors.html)
 
     -a / --alpha ALPHA
@@ -107,6 +119,18 @@ IMAGE OPTIONS (ANATOMY)
 
     --vmin / --vmax VALUE
         Provide minimum or maximum values for the color map.
+
+IMAGE OPTIONS (CHECKERBOARD)
+
+    --boxes BOXES
+        Number of checker boxes to include in the smaller dimension of the plane.
+        Default is 10.
+
+    --no-normalize
+        Omit min-max normalization to put images in same scale.
+
+    --no-matching
+        Omit histogram matching for setting similar intensities of all images.
 
 IMAGE OPTIONS (MASK)
 
@@ -176,18 +200,11 @@ These arguments affect all images.
         or decrease the panel size, you would need to scale both these with the
         correct ratio.
 
-Arguments: Checkerboard
-~~~~~~~~~~~~~~~~~~~~~~~
-
-    --checkerboard
-        Plot images as checkerboard, where contiguous boxes show different
-        images.  This is done instead of plotting images overlaid on top
-        of each other.
     """
 
 # https://stackoverflow.com/a/9028031/13386979
 # for getting argmuents parsed in order
-class CustomAction(argparse.Action):
+class StoreValueInOrder(argparse.Action):
 
     def __call__(self, parser, namespace, values, option_string=None):
 
@@ -198,58 +215,86 @@ class CustomAction(argparse.Action):
         previous.append((self.dest, values))
         setattr(namespace, 'ordered_args', previous)
 
-def parse_ordered_image_args(ordered_args):
+class StoreTrueInOrder(argparse.Action):
 
-    image_flags = {'anat', 'mask'}
-    current_image = None
-    images = []
-    float_arguments = ['alpha', 'maskvalue', 'vmin', 'vmax']
+    def __init__(self,
+                 option_strings,
+                 dest,
+                 default=False,
+                 required=False,
+                 help=None):
+        super().__init__(
+            option_strings=option_strings,
+            dest=dest,
+            nargs=0,
+            const=True,
+            default=default,
+            required=required,
+            help=help)
 
-    for key, value in ordered_args:
+    def __call__(self, parser, namespace, values, option_string=None):
 
-        if key in image_flags:
+        if not 'ordered_args' in namespace:
+            setattr(namespace, 'ordered_args', [])
 
-            if current_image is not None:
-                images.append(current_image)
+        previous = namespace.ordered_args
+        previous.append((self.dest, True))
+        setattr(namespace, 'ordered_args', previous)
 
-            current_image = {}
-            current_image['type'] = key
-            current_image['path'] = value
+class StoreFalseInOrder(argparse.Action):
 
-        else:
+    def __init__(self,
+                 option_strings,
+                 dest,
+                 default=True,
+                 required=False,
+                 help=None):
+        super().__init__(
+            option_strings=option_strings,
+            dest=dest,
+            nargs=0,
+            const=False,
+            default=default,
+            required=required,
+            help=help)
 
-            if current_image is not None:
+    def __call__(self, parser, namespace, values, option_string=None):
 
-                value = float(value) if key in float_arguments else value
-                current_image[key] = value
+        if not 'ordered_args' in namespace:
+            setattr(namespace, 'ordered_args', [])
 
-    if current_image is not None:
-        images.append(current_image)
+        previous = namespace.ordered_args
+        previous.append((self.dest, False))
+        setattr(namespace, 'ordered_args', previous)
 
-    return images
-
-def parse():
+def parse(args=None):
 
     parser = argparse.ArgumentParser(add_help=False)
 
     # IMAGES
 
     # TYPES
-    parser.add_argument('-A', '--anat', action=CustomAction)
-    parser.add_argument('-M', '--mask', action=CustomAction)
+    parser.add_argument('-A', '--anat', action=StoreValueInOrder)
+    parser.add_argument('-C', '--checker', action=StoreValueInOrder, nargs='+')
+    parser.add_argument('-M', '--mask', action=StoreValueInOrder)
 
     # IMAGE OPTIONS (ALL)
-    parser.add_argument('-c', '--color', action=CustomAction)
-    parser.add_argument('-a', '--alpha', action=CustomAction)
+    parser.add_argument('-c', '--color', action=StoreValueInOrder)
+    parser.add_argument('-a', '--alpha', action=StoreValueInOrder, type=float)
 
     # IMAGE OPTIONS (ANATOMY)
-    parser.add_argument('-s', '--scalepanel', action=CustomAction, nargs=0)
-    parser.add_argument('-z', '--dropzero', action=CustomAction, nargs=0)
-    parser.add_argument('--vmin', action=CustomAction)
-    parser.add_argument('--vmax', action=CustomAction)
+    parser.add_argument('-s', '--scalepanel', action=StoreTrueInOrder, dest='scale_panel')
+    parser.add_argument('-z', '--dropzero', action=StoreTrueInOrder, dest='drop_zero')
+    parser.add_argument('--vmin', action=StoreValueInOrder, type=float)
+    parser.add_argument('--vmax', action=StoreValueInOrder, type=float)
+
+    # IMAGE OPTIONS (CHECKERBOARD)
+    parser.add_argument('--boxes', action=StoreValueInOrder, type=int)
+    parser.add_argument('--no-normalize', action=StoreFalseInOrder, dest='normalize')
+    parser.add_argument('--no-matching', action=StoreFalseInOrder, dest='histogram_matching')
 
     # IMAGE OPTIONS (MASK)
-    parser.add_argument('-m', '--maskvalue', action=CustomAction)
+    parser.add_argument('-m', '--maskvalue', action=StoreValueInOrder)
 
     # GLOBALS
     parser.add_argument('-h', '--help', action='store_true')
@@ -273,7 +318,7 @@ def parse():
     parser.add_argument('-b', '--background', default='black')
     parser.add_argument('-S', '--separate', action='store_true')
 
-    args = parser.parse_args()
+    args = parser.parse_args(args=args)
 
     return args
 
@@ -285,18 +330,55 @@ def parse_image_dict(d):
     except KeyError:
         raise RuntimeError(f'Problem parsing CLI input: no "type" field provided for input: {d}')
 
-    if imtype not in ['anat', 'mask']:
+    if imtype == 'anat':
+        return Anatomy(**d)
+    elif imtype == 'mask':
+        return Mask(**d)
+    elif imtype == 'checker':
+        d['paths'] = d['path']
+        del d['path']
+        return CheckerBoard(**d)
+    else:
         raise RuntimeError(f'Problem parsing CLI input: unrecognized image type "{imtype}"')
 
-    cls = Mask if imtype == 'mask' else Anatomy
-    return cls(**d)
+def parse_ordered_image_args(ordered_args):
 
-def main():
+    image_flags = {'anat', 'checker', 'mask'}
+    current_image = None
+    images = []
 
-    args = parse()
+    for key, value in ordered_args:
+
+        if key in image_flags:
+
+            if current_image is not None:
+                images.append(current_image)
+
+            current_image = {}
+            current_image['type'] = key
+            current_image['path'] = value
+
+        else:
+
+            if current_image is not None:
+                current_image[key] = value
+
+    if current_image is not None:
+        images.append(current_image)
+
+    return images
+
+def main(arguments=None):
+
+    args = parse(arguments)
 
     # detect empty call
-    if not len(sys.argv) > 1:
+    cli_mode = arguments is None
+
+    if cli_mode and len(sys.argv) == 1:
+        args.help = True
+
+    if not cli_mode and not arguments:
         args.help = True
 
     if args.help:
