@@ -25,6 +25,11 @@ class Image(ABC):
     def shape(self):
         return self.nifti.header.get_data_shape()
 
+    def dimension_shape(self, dimension):
+        tmp = tuple((s for i, s in enumerate(self.shape) if i != dimension))
+        rot90 = tmp[1], tmp[0]
+        return rot90
+
     @abstractmethod
     def plot_slice(self, dimension, position, ax=None, **kwargs):
         ...

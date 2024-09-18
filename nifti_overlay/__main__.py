@@ -35,6 +35,7 @@ Example uses:
     - Plotting an anatomical image.
     - Plotting a mask over an anatomical image to verify overlap.
     - Plotting the overlap of multiple masks.
+    - Plotting a checkerboard showing registration alignment
 
 Requirments
 ~~~~~~~~~~~
@@ -174,6 +175,14 @@ These arguments affect all images.
         grid of images, rather than individual panels.  As such, to increase
         or decrease the panel size, you would need to scale both these with the
         correct ratio.
+
+Arguments: Checkerboard
+~~~~~~~~~~~~~~~~~~~~~~~
+
+    --checkerboard
+        Plot images as checkerboard, where contiguous boxes show different
+        images.  This is done instead of plotting images overlaid on top
+        of each other.
     """
 
 # https://stackoverflow.com/a/9028031/13386979
