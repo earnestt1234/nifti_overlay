@@ -14,7 +14,8 @@ with open(path.join(this_directory, 'nifti_overlay', '__version__.py'), encoding
 dependencies = [
     "matplotlib>=3.2",
     "nibabel>=3.2",
-    "numpy>=1.2"
+    "numpy>=1.2",
+    "scikit-image>=0.24.0"
 ]
 
 setup(name='nifti_overlay',
