@@ -84,10 +84,10 @@ class NiftiOverlay:
         return paddings
 
 
-    def add_anat(self, path, color='gist_gray', alpha=1,
+    def add_anat(self, src, color='gist_gray', alpha=1,
                  scale_panel=False, drop_zero=False, vmin=None,
                  vmax=None):
-        img = Anatomy(path=path, color=color, alpha=alpha,
+        img = Anatomy(src=src, color=color, alpha=alpha,
                       scale_panel=scale_panel, drop_zero=drop_zero,
                       vmin=vmin, vmax=vmax)
         self.images.append(img)
@@ -101,13 +101,13 @@ class NiftiOverlay:
         self.images.append(img)
         return img
 
-    def add_edges(self, path, color='yellow', alpha=1.0, sigma=1.0):
-        img = Edges(path=path, color=color, alpha=alpha, sigma=sigma)
+    def add_edges(self, src, color='yellow', alpha=1.0, sigma=1.0):
+        img = Edges(src=src, color=color, alpha=alpha, sigma=sigma)
         self.images.append(img)
         return img
 
-    def add_mask(self, path, color=None, alpha=1, mask_value=1):
-        img = Mask(path=path, color=color, alpha=alpha, mask_value=mask_value)
+    def add_mask(self, src, color=None, alpha=1, mask_value=1):
+        img = Mask(src=src, color=color, alpha=alpha, mask_value=mask_value)
         self.images.append(img)
         return img
 

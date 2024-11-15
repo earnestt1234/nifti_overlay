@@ -16,9 +16,9 @@ from nifti_overlay.image import Anatomy
 
 class MultiImage(ABC):
 
-    def __init__(self, paths):
-        self.paths = paths
-        self.images = [Anatomy(p) for p in self.paths]
+    def __init__(self, src):
+        self.src = src
+        self.images = [Anatomy(p) for p in self.src]
         self.shape = self._determine_shape()
 
     def _determine_shape(self):

@@ -7,6 +7,7 @@ Created on Thu Sep 12 15:16:34 2024
 """
 
 from abc import ABC, abstractmethod
+import pathlib
 
 import nibabel as nib
 import matplotlib
@@ -16,18 +17,42 @@ from skimage import feature
 
 class Image(ABC):
 
-    def __init__(self, path):
-        self.path = path
-        self.nifti = nib.load(self.path)
+    def __init__(self, src):
+
+        # read different formats
+        if isinstance(src, str):
+            self.nifti = nib.load(src)
+            self.path = src
+        elif isinstance(src, pathlib.Path):
+            path = str(src)
+            self.nifti = nib.load(path)
+            self.path = path
+        elif isinstance(src, nib.Nifti1Image):
+            self.nifti = src
+            self.path = None
+        elif isinstance(src, np.ndarray) and len(src.shape) == 3:
+            self.nifti = nib.Nifti1Image(dataobj=src, affine=None)
+            self.path = None
+        else:
+            raise TypeError('Acceptable types for initialization are '
+                            'str, pathlib.Path, nibabel.Nifti1Image '
+                            f'or numpy.ndarray; not {type(src)}')
+
+        # set other attributes
         self.nifti = nib.as_closest_canonical(self.nifti)
         self.data = self.nifti.get_fdata()
+
+        # check shape
+        if len(self.shape) != 3:
+            raise ValueError(f'Image must be 3D; image dimensions are: {self.shape}')
 
     @property
     def shape(self):
         return self.nifti.header.get_data_shape()
 
     def dimension_shape(self, dimension):
-        tmp = tuple((s for i, s in enumerate(self.shape) if i != dimension))
+        tmp = list(self.shape)
+        del tmp[dimension]
         rot90 = tmp[1], tmp[0]
         return rot90
 

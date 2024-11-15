@@ -361,8 +361,6 @@ def parse_image_dict(d):
     elif imtype == 'mask':
         return Mask(**d)
     elif imtype == 'checker':
-        d['paths'] = d['path']
-        del d['path']
         return CheckerBoard(**d)
     else:
         raise RuntimeError(f'Problem parsing CLI input: unrecognized image type "{imtype}"')
@@ -382,7 +380,7 @@ def parse_ordered_image_args(ordered_args):
 
             current_image = {}
             current_image['type'] = key
-            current_image['path'] = value
+            current_image['src'] = value
 
         else:
 
