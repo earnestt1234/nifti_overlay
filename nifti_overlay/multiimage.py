@@ -115,5 +115,5 @@ class CheckerBoard(MultiImage):
         if ax is None:
             ax = plt.gca()
 
-        ax.imshow(xsect, cmap=self.color,
-                  aspect='auto', alpha=self.alpha, **kwargs)
+        return ax.imshow(xsect, cmap=self.color,
+                         aspect='auto', alpha=self.alpha, **kwargs)

@@ -104,9 +104,9 @@ class Anatomy(Image):
             vmax = xsect.max() if self.scale_panel else data.max()
 
         # plot
-        ax.imshow(xsect, cmap=self.color,
-                  aspect='auto', vmin=vmin, vmax=vmax,
-                  alpha=self.alpha, **kwargs)
+        return ax.imshow(xsect, cmap=self.color,
+                         aspect='auto', vmin=vmin, vmax=vmax,
+                         alpha=self.alpha, **kwargs)
 
 class Edges(Image):
 
@@ -132,7 +132,7 @@ class Edges(Image):
         rgba = matplotlib.colors.to_rgba(self.color, alpha=self.alpha)
         X[edges] = rgba
 
-        ax.imshow(X, aspect='auto', alpha=self.alpha, interpolation=self.interpolation, **kwargs)
+        return ax.imshow(X, aspect='auto', alpha=self.alpha, interpolation=self.interpolation, **kwargs)
 
 class Mask(Image):
 
@@ -164,4 +164,4 @@ class Mask(Image):
         norm = matplotlib.colors.BoundaryNorm(bounds, cmap.N)
 
         xsect = self.get_slice(dimension, position)
-        ax.imshow(xsect, cmap=cmap, norm=norm, aspect='auto', alpha=self.alpha, **kwargs)
+        return ax.imshow(xsect, cmap=cmap, norm=norm, aspect='auto', alpha=self.alpha, **kwargs)

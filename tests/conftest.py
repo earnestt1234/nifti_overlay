@@ -6,6 +6,7 @@ Created on Tue Nov 12 20:20:28 2024
 @author: earnestt1234
 """
 
+import matplotlib
 import nibabel as nib
 import numpy as np
 
@@ -15,6 +16,8 @@ AFFINE = np.array([[-1., 0., 0., 0],
                    [0., 1., 0., -126.,],
                    [0., 0., 1., -72.],
                    [0., 0., 0., 1.]])
+
+matplotlib.use('Agg')
 
 def _make_nifti_4D():
     shape = (7, 7, 5, 3)
