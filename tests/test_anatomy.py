@@ -30,7 +30,7 @@ def test_drop_zero(nifti_path):
                      [nan, 1., 2., 2., 2., 1., nan],
                      [nan, 1., 1., 1., 1., 1., nan],
                      [nan, nan, nan, nan, nan, nan, nan]])
-    assert np.all(datax == ansx)
+    assert np.array_equal(datax, ansx, equal_nan=True)
 
 def test_get_slice(nifti_path):
     img = Anatomy(nifti_path)

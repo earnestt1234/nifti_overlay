@@ -79,7 +79,7 @@ class Anatomy(Image):
 
         if self.drop_zero:
             data = np.where(data == 0, np.nan, data)
-            data = np.ma.array(data, mask=np.isnan(data))
+            data = np.ma.array(data, mask=np.isnan(data)).data
 
         xsect = np.rot90(np.take(data, indices=position, axis=dimension))
         return xsect
@@ -144,7 +144,7 @@ class Mask(Image):
 
     def get_slice(self, dimension, position):
         data = np.where(self.data == self.mask_value, 1, np.nan)
-        data = np.ma.array(data, mask=np.isnan(data))
+        data = np.ma.array(data, mask=np.isnan(data)).data
         xsect = np.rot90(np.take(data, indices=position, axis=dimension))
         return xsect
 
