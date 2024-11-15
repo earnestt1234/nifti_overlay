@@ -63,10 +63,10 @@ class Image(ABC):
 
 class Anatomy(Image):
 
-    def __init__(self, path, color='gist_gray', alpha=1,
+    def __init__(self, src, color='gist_gray', alpha=1,
                  scale_panel=False, drop_zero=False, vmin=None,
                  vmax=None):
-        super().__init__(path)
+        super().__init__(src)
         self.color = color
         self.alpha = alpha
         self.scale_panel = scale_panel
@@ -110,8 +110,8 @@ class Anatomy(Image):
 
 class Edges(Image):
 
-    def __init__(self, path, color='yellow', alpha=1.0, sigma=1.0, interpolation='none'):
-        super().__init__(path)
+    def __init__(self, src, color='yellow', alpha=1.0, sigma=1.0, interpolation='none'):
+        super().__init__(src)
         self.color = color
         self.alpha = alpha
         self.sigma = sigma
@@ -136,8 +136,8 @@ class Edges(Image):
 
 class Mask(Image):
 
-    def __init__(self, path, color=None, alpha=1, mask_value=1):
-        super().__init__(path)
+    def __init__(self, src, color=None, alpha=1, mask_value=1):
+        super().__init__(src)
         self.color = color
         self.alpha = alpha
         self.mask_value = mask_value

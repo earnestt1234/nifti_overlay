@@ -51,9 +51,9 @@ class MultiImage(ABC):
 
 class CheckerBoard(MultiImage):
 
-    def __init__(self, paths, boxes=10, normalize=True,
+    def __init__(self, src, boxes=10, normalize=True,
                  histogram_matching=True, color='gist_gray', alpha=1):
-        super().__init__(paths)
+        super().__init__(src)
         self.boxes = boxes
         self.normalize = normalize
         self.histogram_matching = histogram_matching
