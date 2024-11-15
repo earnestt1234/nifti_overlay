@@ -7,6 +7,7 @@ Created on Wed Nov 13 21:03:25 2024
 """
 
 import os
+import pathlib
 
 import nibabel as nib
 from nifti_overlay.image import Image
@@ -65,6 +66,26 @@ def test_dimension_shape_oor(nifti_path):
 def test_load_non3d(nifti4d_path):
     with pytest.raises(ValueError):
         _ = MockImage(nifti4d_path)
+
+def test_load_frompath(nifti_path):
+    img = MockImage(nifti_path)
+    assert isinstance(img, Image)
+
+def test_load_frompathlib(nifti_path):
+    path = pathlib.Path(nifti_path)
+    img = MockImage(path)
+    assert isinstance(img, Image)
+
+def test_load_fromnibabel(nifti_path):
+    nii = nib.load(nifti_path)
+    img = MockImage(nii)
+    assert isinstance(img, Image)
+
+def test_load_fromnumpy(nifti_path):
+    nii = nib.load(nifti_path)
+    a = nii.get_fdata()
+    with pytest.raises(Exception):
+        _ = MockImage(a)
 
 def test_shape(nifti_path):
     img = MockImage(nifti_path)

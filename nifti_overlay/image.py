@@ -30,13 +30,10 @@ class Image(ABC):
         elif isinstance(src, nib.Nifti1Image):
             self.nifti = src
             self.path = None
-        elif isinstance(src, np.ndarray) and len(src.shape) == 3:
-            self.nifti = nib.Nifti1Image(dataobj=src, affine=None)
-            self.path = None
         else:
             raise TypeError('Acceptable types for initialization are '
-                            'str, pathlib.Path, nibabel.Nifti1Image '
-                            f'or numpy.ndarray; not {type(src)}')
+                            'str, pathlib.Path, or nibabel.Nifti1Image, '
+                            f'not {type(src)}')
 
         # set other attributes
         self.nifti = nib.as_closest_canonical(self.nifti)
