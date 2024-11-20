@@ -93,9 +93,9 @@ class NiftiOverlay:
         self.images.append(img)
         return img
 
-    def add_checkerboard(self, paths, boxes=10, color='gist_gray', alpha=1,
+    def add_checkerboard(self, src, boxes=10, color='gist_gray', alpha=1,
                          normalize=True, histogram_matching=True):
-        img = CheckerBoard(paths=paths, boxes=boxes, color=color,
+        img = CheckerBoard(src=src, boxes=boxes, color=color,
                            alpha=alpha, normalize=normalize,
                            histogram_matching=histogram_matching)
         self.images.append(img)
