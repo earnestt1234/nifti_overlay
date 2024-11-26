@@ -47,6 +47,12 @@ class Image(ABC):
     def shape(self):
         return self.nifti.header.get_data_shape()
 
+    def aspect(self, dimension):
+        voxel_dims = list(self.nifti.header["pixdim"][1:4])
+        del voxel_dims[dimension]
+        x, y = voxel_dims
+        return y/x
+
     def dimension_shape(self, dimension):
         tmp = list(self.shape)
         del tmp[dimension]
@@ -104,8 +110,9 @@ class Anatomy(Image):
             vmax = xsect.max() if self.scale_panel else data.max()
 
         # plot
+        aspect = self.aspect(dimension)
         return ax.imshow(xsect, cmap=self.color,
-                         aspect='auto', vmin=vmin, vmax=vmax,
+                         aspect=aspect, vmin=vmin, vmax=vmax,
                          alpha=self.alpha, **kwargs)
 
 class Edges(Image):
@@ -132,7 +139,8 @@ class Edges(Image):
         rgba = matplotlib.colors.to_rgba(self.color, alpha=self.alpha)
         X[edges] = rgba
 
-        return ax.imshow(X, aspect='auto', alpha=self.alpha, interpolation=self.interpolation, **kwargs)
+        aspect = self.aspect(dimension)
+        return ax.imshow(X, aspect=aspect, alpha=self.alpha, interpolation=self.interpolation, **kwargs)
 
 class Mask(Image):
 
@@ -164,4 +172,5 @@ class Mask(Image):
         norm = matplotlib.colors.BoundaryNorm(bounds, cmap.N)
 
         xsect = self.get_slice(dimension, position)
-        return ax.imshow(xsect, cmap=cmap, norm=norm, aspect='auto', alpha=self.alpha, **kwargs)
+        aspect = self.aspect(dimension)
+        return ax.imshow(xsect, cmap=cmap, norm=norm, aspect=aspect, alpha=self.alpha, **kwargs)

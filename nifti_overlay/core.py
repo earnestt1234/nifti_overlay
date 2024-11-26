@@ -235,7 +235,6 @@ class NiftiOverlay:
                 if mask_color is not None:
                     panel_args['_override_color'] = mask_color
                 image.plot_slice(**panel_args)
-                ax.set_aspect(1)
                 ax.axis('off')
                 ax.set_facecolor(self.background)
 

@@ -7,6 +7,7 @@ Created on Wed Sep 18 09:38:48 2024
 """
 
 from abc import ABC, abstractmethod
+import warnings
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -35,6 +36,16 @@ class MultiImage(ABC):
         # different shape
         else:
             raise ValueError(f"DIMENSION ERROR.  Found different image dimensions for different images: {shapeset}")
+
+    def aspect(self, dimension):
+        aspects = [img.aspect(dimension) for img in self.images]
+        aspects_set = set(aspects)
+        if len(aspects_set) != 1:
+            warnings.warn(RuntimeWarning('Multiple aspects detected for MultiImage; using the one computed '
+                                         'from the first image.'))
+
+        return aspects[0]
+
 
     def dimension_shape(self, dimension):
         tmp = tuple((s for i, s in enumerate(self.shape) if i != dimension))
@@ -115,5 +126,6 @@ class CheckerBoard(MultiImage):
         if ax is None:
             ax = plt.gca()
 
+        aspect = self.aspect(dimension)
         return ax.imshow(xsect, cmap=self.color,
-                         aspect='auto', alpha=self.alpha, **kwargs)
+                         aspect=aspect, alpha=self.alpha, **kwargs)
