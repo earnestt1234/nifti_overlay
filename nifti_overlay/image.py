@@ -144,7 +144,7 @@ class Edges(Image):
 
 class Mask(Image):
 
-    def __init__(self, src, color=None, alpha=1, mask_value=1):
+    def __init__(self, src, color='red', alpha=1, mask_value=1):
         super().__init__(src)
         self.color = color
         self.alpha = alpha
