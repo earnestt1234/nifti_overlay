@@ -35,7 +35,7 @@ def _make_nifti_nested(x=7, y=7, z=5):
     return nii
 
 def _make_nifti_random(x=7, y=7, z=5):
-    data = np.random.rand(x, y, z)
+    data = np.random.rand(x, y, z) * 100
     nii = nib.Nifti1Image(dataobj=data, affine=AFFINE)
     return nii
 

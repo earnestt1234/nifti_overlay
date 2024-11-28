@@ -90,6 +90,7 @@ class CheckerBoard(MultiImage):
 
         return cboard_padded
 
+    @classmethod
     def _make_checker_array(self, x, y, width, levels):
         base_pattern = np.indices((x, y)).sum(axis=0) % levels
         checkers = np.kron(base_pattern, np.ones((width, width)))
