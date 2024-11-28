@@ -25,12 +25,17 @@ def _make_nifti_4D():
     nii = nib.Nifti1Image(dataobj=data, affine=AFFINE)
     return nii
 
-def _make_nifti_nested():
-    shape = (7, 7, 5)
+def _make_nifti_nested(x=7, y=7, z=5):
+    shape = (x, y, z)
     data = np.zeros(shape)
     x, y, z = shape
     data[1:x-1, 1:x-1, 1:z-1] = 1
     data[2:x-2, 2:x-2, 2:z-2] = 2
+    nii = nib.Nifti1Image(dataobj=data, affine=AFFINE)
+    return nii
+
+def _make_nifti_random(x=7, y=7, z=5):
+    data = np.random.rand(x, y, z)
     nii = nib.Nifti1Image(dataobj=data, affine=AFFINE)
     return nii
 
@@ -43,7 +48,25 @@ def nifti4d_path(tmp_path_factory):
 
 @pytest.fixture
 def nifti_path(tmp_path_factory):
-    nii = _make_nifti_nested()
+    nii = _make_nifti_nested(x=7, y=7, z=5)
     path = tmp_path_factory.mktemp("data") / "nested.nii.gz"
     nib.save(nii, path)
     return str(path)
+
+@pytest.fixture
+def multinifti_paths(tmp_path_factory, n=3):
+    paths = []
+    for i in range(n):
+        nii = _make_nifti_random(x=7, y=7, z=5)
+        path = tmp_path_factory.mktemp("data") / f"multinifti{n}.nii.gz"
+        nib.save(nii, path)
+        paths.append(path)
+    return paths
+
+@pytest.fixture
+def nifti_path_alt_shape(tmp_path_factory):
+    nii = _make_nifti_nested(x=7, y=7, z=6)
+    path = tmp_path_factory.mktemp("data") / "nested.nii.gz"
+    nib.save(nii, path)
+    return str(path)
+
