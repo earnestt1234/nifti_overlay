@@ -106,7 +106,7 @@ IMAGES
     -M / --mask MASK
         Path to a mask image to plot
 
-IMAGE OPTIONS (ALL)
+IMAGE OPTIONS (ALL: Applicable to all image types)
 
     -c / --color COLOR
         Color for the image.
