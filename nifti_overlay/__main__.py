@@ -354,15 +354,18 @@ def parse_image_dict(d):
     except KeyError:
         raise RuntimeError(f'Problem parsing CLI input: no "type" field provided for input: {d}')
 
-    if imtype == 'anat':
-        return Anatomy(**d)
-    elif imtype == 'edges':
-        return Edges(**d)
-    elif imtype == 'mask':
-        return Mask(**d)
-    elif imtype == 'checker':
-        return CheckerBoard(**d)
-    else:
+
+    mapping = {
+        'anat': Anatomy,
+        'edges': Edges,
+        'mask': Mask,
+        'checker': CheckerBoard
+        }
+
+    try:
+        CLS = mapping[imtype]
+        return CLS(**d)
+    except KeyError:
         raise RuntimeError(f'Problem parsing CLI input: unrecognized image type "{imtype}"')
 
 def parse_ordered_image_args(ordered_args):
