@@ -130,7 +130,7 @@ class NiftiOverlay:
 
         # different shape
         else:
-            raise ValueError(f"DIMENSION ERROR.  Found different image dimensions for different images: {shapeset}")
+            raise RuntimeError(f"DIMENSION ERROR.  Found different image dimensions for different images: {shapeset}")
 
     def _get_figure_dimensions(self):
         if self.figsize == 'automatic':
@@ -163,12 +163,7 @@ class NiftiOverlay:
         elif self.axes.ndim == 2:
             pass
         elif self.axes.ndim == 1:
-            x_ = len(self.axes) if not self.transpose else 1
-            y_ = 1 if not self.transpose else len(self.axes)
-            self.axes = self.axes.reshape([x_, y_])
-
-        if self.transpose:
-            self.axes = self.axes.T
+            self.axes = self.axes.reshape([self.nrows, self.ncols])
 
     def _main_plot_loop(self):
         total = len(self.images)
@@ -204,7 +199,7 @@ class NiftiOverlay:
             min_window, max_window = self.paddings[p]
             min_slice = int(min_window*dimension_size)
             max_slice = int(max_window*dimension_size)
-            num = self.nrows if self.transpose else self.ncols
+            num = self.nslices
 
             if num == 1:
                 indices = [int((max_slice + min_slice) / 2)]
@@ -219,15 +214,17 @@ class NiftiOverlay:
 
             for j, idx in enumerate(indices):
 
-                ax = self.axes[i, j]
-                position = int(idx)
-
-                panel_args = {'dimension': dimension, 'position': position, 'ax': ax}
-
                 percentage = round(((i * len(indices) + j) / total_panels) * 100, 2)
 
                 self.print()
                 self.print(f'Plotting panel [{i}, {j}] ({percentage}%)')
+
+                ax_x = i if not self.transpose else j
+                ax_y = j if not self.transpose else i
+                ax = self.axes[ax_x, ax_y]
+                position = int(idx)
+                panel_args = {'dimension': dimension, 'position': position, 'ax': ax}
+
                 self.print("Call:")
                 for k, v in panel_args.items():
                     self.print(f"  {k}: {v}")

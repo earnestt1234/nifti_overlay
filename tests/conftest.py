@@ -40,6 +40,21 @@ def _make_nifti_random(x=7, y=7, z=5):
     return nii
 
 @pytest.fixture
+def directory_path(tmp_path_factory):
+    path = tmp_path_factory.mktemp('save')
+    return path
+
+@pytest.fixture
+def multinifti_paths(tmp_path_factory, n=3):
+    paths = []
+    for i in range(n):
+        nii = _make_nifti_random(x=7, y=7, z=5)
+        path = tmp_path_factory.mktemp("data") / f"multinifti{n}.nii.gz"
+        nib.save(nii, path)
+        paths.append(path)
+    return paths
+
+@pytest.fixture
 def nifti4d_path(tmp_path_factory):
     nii = _make_nifti_4D()
     path = tmp_path_factory.mktemp("data") / "4d.nii.gz"
@@ -53,15 +68,6 @@ def nifti_path(tmp_path_factory):
     nib.save(nii, path)
     return str(path)
 
-@pytest.fixture
-def multinifti_paths(tmp_path_factory, n=3):
-    paths = []
-    for i in range(n):
-        nii = _make_nifti_random(x=7, y=7, z=5)
-        path = tmp_path_factory.mktemp("data") / f"multinifti{n}.nii.gz"
-        nib.save(nii, path)
-        paths.append(path)
-    return paths
 
 @pytest.fixture
 def nifti_path_alt_shape(tmp_path_factory):
@@ -69,4 +75,10 @@ def nifti_path_alt_shape(tmp_path_factory):
     path = tmp_path_factory.mktemp("data") / "nested.nii.gz"
     nib.save(nii, path)
     return str(path)
+
+@pytest.fixture
+def png_path(tmp_path_factory):
+    path = tmp_path_factory.mktemp("save") / "myimage.png"
+    return path
+
 
