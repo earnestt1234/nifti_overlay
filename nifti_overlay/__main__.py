@@ -395,9 +395,10 @@ def parse_ordered_image_args(ordered_args):
 
     return images
 
-def main(arguments=None):
+def main(arguments=None, debug=False):
 
     args = parse(arguments)
+    DEBUG = debug
 
     # detect empty call
     cli_mode = arguments is None
@@ -413,7 +414,7 @@ def main(arguments=None):
         return
 
     # no output specified
-    if args.output is None and not args.plot:
+    elif (args.output is None) and (not args.plot) and (not DEBUG):
         raise ValueError("Either output (-o) must be specified or the plot (-P) "
                          "option must be passed.  Run `nifti_overlay -h` for help.")
 
@@ -450,6 +451,11 @@ def main(arguments=None):
     image_dicts = parse_ordered_image_args(args.ordered_args)
     for d in image_dicts:
         overlay.images.append(parse_image_dict(d))
+
+    # exit if debugging
+    # allows for the NiftiOverlay object to be inspected
+    if DEBUG:
+        return overlay
 
     # run
     _ = overlay.plot()
