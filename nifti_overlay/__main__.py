@@ -354,7 +354,6 @@ def parse_image_dict(d):
     except KeyError:
         raise RuntimeError(f'Problem parsing CLI input: no "type" field provided for input: {d}')
 
-
     mapping = {
         'anat': Anatomy,
         'edges': Edges,
