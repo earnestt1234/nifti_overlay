@@ -199,8 +199,41 @@ class NiftiOverlay:
         self.images.append(img)
         return img
 
-    def add_checkerboard(self, src, boxes=10, color='gist_gray', alpha=1,
-                         normalize=True, histogram_matching=True):
+    def add_checkerboard(
+            self,
+            src: str | pathlib.Path | nib.Nifti1Image,
+            boxes: int = 10,
+            color: str = 'gist_gray',
+            alpha: float = 1.0,
+            normalize: bool = True,
+            histogram_matching: bool = True
+            ) -> CheckerBoard:
+        """Add a checkerboard to be plotted.
+
+        Parameters
+        ----------
+        src : Sequence[str, pathlib.Path, nib.Nifti1Image]
+            Collection of images.
+        boxes : int, optional
+            The number of boxes across *in the shortest dimension of the slice being plotted*, by default 10
+        color : str, optional
+            Matplotlib colormap to use, by default 'gist_gray'
+        alpha : float, optional
+            Color opacity, by default 1.0
+        normalize : bool, optional
+            Normalize slices being plotted to be between 0 and 1, by default True
+        histogram_matching : bool, optional
+            Use `skimage.exposure.histogram_matching` to normalize the intensities of images being
+            plotted, by default True.  As one colormap is applied to all images, this can
+            be good to make sure all images are visible.  May not be necessary if the images are
+            all coming in with the same dynamic range.
+        
+
+        Returns
+        -------
+        CheckerBoard
+            Object for managing the image being plotted.
+        """
         img = CheckerBoard(src=src, boxes=boxes, color=color,
                            alpha=alpha, normalize=normalize,
                            histogram_matching=histogram_matching)
@@ -238,12 +271,39 @@ class NiftiOverlay:
         Edges
             Object for managing the image being plotted.
         """
-
         img = Edges(src=src, color=color, alpha=alpha, sigma=sigma, interpolation=interpolation)
         self.images.append(img)
         return img
 
-    def add_mask(self, src, color=None, alpha=1, mask_value=1):
+    def add_mask(
+            self,
+            src: str | pathlib.Path | nib.Nifti1Image,
+            color: str='red',
+            alpha: float=1.0, 
+            mask_value: float=1.0,
+            ) -> Mask:
+        """Add a mask to be plotted; a binary image plotted with a single
+        color.
+
+        Parameters
+        ----------
+        src : str path, pathlib.Path, or nibabel.Nifti1Image
+            Source image.
+        color : str, RGB, RGBA, optional
+            Color understood by matplotlib. The default is 'red'.
+        alpha : float, optional
+            Color transparency. The default is 1.0.
+        mask_value : int or float, optional
+            Value to be plotted. For segmentations with multiple labels,
+            this can be used to specify the single label to be plotted.
+            The default is 1.  (Note: to plot all values for a multi-label
+            segmentation, you can plot it as an Anatomy instead of a Mask.)
+
+        Returns
+        -------
+        Mask
+            Object for managing the image being plotted.
+        """
         img = Mask(src=src, color=color, alpha=alpha, mask_value=mask_value)
         self.images.append(img)
         return img

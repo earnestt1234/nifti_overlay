@@ -258,17 +258,45 @@ class Edges(Image):
         self.sigma = sigma
         self.interpolation = interpolation
 
-    def get_slice(self, dimension, position):
-        """Return the data for a 2D slice from one axis (`dimension`) at a given depth (`position`).
-
+    def get_slice(self, dimension: int, position: int):
+        """Return the data to be plotted for a given slice.
         The data for a slice is first indexed, and then the Canny edge detector
-        is run to generate the binary edge image for the slice."""
+        is run to generate the binary edge image for the slice.
+
+        Parameters
+        ----------
+        dimension : int
+            Image dimension to plot over (0 for x, 1 for y, 2 for z).
+        position : int
+            Index of the slice to plot.
+
+        Returns
+        -------
+        numpy array
+            Imaging slice data.
+        """
         xsect = np.rot90(np.take(self.data, indices=position, axis=dimension))
         edges = feature.canny(xsect, sigma=self.sigma)
         return edges
 
-    def plot_slice(self, dimension, position, ax=None, **kwargs):
-        """Plot a 2D slice from one axis (`dimension`) at a given depth (`position`)."""
+    def plot_slice(self, dimension: int, position: int, ax: matplotlib.axes.Axes | None = None, **kwargs):
+        """Plot the data for a given slice.
+
+        Parameters
+        ----------
+        dimension : int
+            Image dimension to plot over (0 for x, 1 for y, 2 for z).
+        position : int
+            Index of the slice to plot.
+        ax : None | matplotlib.axes.Axes, optional
+            Matplotlib axes to plot on, by default None, in which case
+            ``plt.gca()`` is used.
+
+        Returns
+        -------
+        matplotlib axes
+            Axes after plotting.
+        """
 
         if ax is None:
             ax = plt.gca()
@@ -284,7 +312,13 @@ class Edges(Image):
 class Mask(Image):
     """Class for plotting a binary mask, represented as a single color."""
 
-    def __init__(self, src, color='red', alpha=1, mask_value=1):
+    def __init__(
+            self,
+            src: str | pathlib.Path | nib.Nifti1Image,
+            color: str = 'red',
+            alpha: float = 1.0,
+            mask_value: float = 1.0
+            ):
         """
         Instantiate a Mask image.
 
@@ -312,19 +346,56 @@ class Mask(Image):
         self.alpha = alpha
         self.mask_value = mask_value
 
-    def get_slice(self, dimension, position):
-        """Return the data for a 2D slice from one axis (`dimension`) at a given depth (`position`).
-
+    def get_slice(self, dimension: int, position: int):
+        """Return the data to be plotted for a given slice.
         The intesities for a slice are first extracted.  Then, all values
         matching the `mask_value` are replaced with `1`, and all other values
-        are replaced with NaN."""
+        are replaced with NaN.
+
+        Parameters
+        ----------
+        dimension : int
+            Image dimension to plot over (0 for x, 1 for y, 2 for z).
+        position : int
+            Index of the slice to plot.
+
+        Returns
+        -------
+        numpy array
+            Imaging slice data.
+        """
         data = np.where(self.data == self.mask_value, 1, np.nan)
         data = np.ma.array(data, mask=np.isnan(data)).data
         xsect = np.rot90(np.take(data, indices=position, axis=dimension))
         return xsect
 
-    def plot_slice(self, dimension, position, ax=None, _override_color=None, **kwargs):
-        """Plot a 2D slice from one axis (`dimension`) at a given depth (`position`)."""
+    def plot_slice(
+            self,
+            dimension: int,
+            position: int,
+            ax: matplotlib.axes.Axes | None = None,
+            _override_color: str | None = None,
+            **kwargs):
+        """Plot the data for a given slice.
+
+        Parameters
+        ----------
+        dimension : int
+            Image dimension to plot over (0 for x, 1 for y, 2 for z).
+        position : int
+            Index of the slice to plot.
+        ax : None | matplotlib.axes.Axes, optional
+            Matplotlib axes to plot on, by default None, in which case
+            ``plt.gca()`` is used.
+        _override_color : str | None
+            Set a color which is only used at time of plotting.  Mostly
+            for internal purposes.
+
+        Returns
+        -------
+        matplotlib axes
+            Axes after plotting.
+        """
 
         if ax is None:
             ax = plt.gca()
