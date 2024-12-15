@@ -309,12 +309,14 @@ class NiftiOverlay:
         return img
 
     def _check_images(self):
+        """Plot initialization helper to check if any image have been added."""
         if not self.images:
             raise RuntimeError('No images have been added for plotting. Use '
                                'NiftiOverlay().add_anat() or NiftiOverlay.add_mask() '
                                'to add images to be plotted')
 
     def _check_mismatched_dimensions(self):
+        """Plot initialization helper to check if the images have mismatched dimensions."""
         # no images added
         if not self.images:
             return None
@@ -330,6 +332,11 @@ class NiftiOverlay:
             raise RuntimeError(f"DIMENSION ERROR.  Found different image dimensions for different images: {shapeset}")
 
     def _get_figure_dimensions(self):
+        """Return the figure dimensions in inches (x-dimensions, y-dimensions).
+        When ``figsize="automatic"``, will return dimensions which are proportional
+        to the number of rows and columns of panels being plotted.  By default,
+        the ratio is 1 inch for every row and 1 inch for every column.  This ratio
+        can be altered with the ``automatic_figsize_scale`` attribute."""
         if self.figsize == 'automatic':
             figx, figy = self.ncols, self.nrows
             figx *= self.automatic_figsize_scale
@@ -340,6 +347,9 @@ class NiftiOverlay:
         return figx, figy
 
     def _init_figure(self):
+        """Initialize a figure for plotting.  This will get the figure dimensions,
+        and create a matplotlib Figure and Axes with approrpriate formatting.
+        Axes are reshaped to have the same dimensions as the overlay panels."""
 
         figx, figy = self._get_figure_dimensions()
 
@@ -363,11 +373,15 @@ class NiftiOverlay:
             self.axes = self.axes.reshape([self.nrows, self.ncols])
 
     def _main_plot_loop(self):
+        """Start the plot."""
         total = len(self.images)
         for index, image in enumerate(self.images):
             self._plot_image(image, index, total)
 
     def _plot_image(self, image, index, total):
+        """Plot a single image.  ``index`` and ``total`` are used just
+        for printing purposes to show the plotting progress.  All panels
+        for one image are plotted with one call to this function."""
 
         n = index
         if isinstance(image, MultiImage):
@@ -441,12 +455,33 @@ class NiftiOverlay:
         self.print("--------------------------------------------------")
 
     def plot(self):
+        """Run the plot with the provided parameters (set during initialization)
+        of NiftiOverlay and the images added with the ``add_...()`` methods.
+        """
         self._check_images()
         self._check_mismatched_dimensions()
         self._init_figure()
         self._main_plot_loop()
 
-    def generate(self, savepath, separate=False, rerun=True):
+    def generate(self, savepath: str, separate: bool = False, rerun: bool = True):
+        """Create the plot and save it to a file (or files).
+
+        Parameters
+        ----------
+        savepath : str
+            Path to save output image file, with extension included.  See matplotlib
+            documentation for acceptable output format.s
+        separate : bool, optional
+            Save each panel as a separate image, by default False.  In this case,
+            a directory path should be provided instead of a single file path.
+            Images will be saved as PNG.  If the provided directory does not
+            exist, it will attempt to be created.
+        rerun : bool, optional
+            Regenerate the figure before saving, by default True.  In some cases,
+            you may have already called the ``plot()`` method and made no changes to
+            the visualization, in which case rerunning is not strictly necessary.
+            But changes are not automatically detected - so rerunning is default.
+        """
 
         if self.fig is None or rerun:
             self.plot()
