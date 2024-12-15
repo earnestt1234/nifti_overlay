@@ -1,26 +1,85 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Thu Sep 12 15:00:05 2024
-
-@author: earnestt1234
+Module containing code for generating images of NIFTI images overlaid on each other.
 """
 
 from itertools import cycle
 import os
+import pathlib
+from typing import Tuple
 
 import matplotlib.pyplot as plt
+import nibabel as nib
 import numpy as np
 
 from nifti_overlay.image import Anatomy, Edges, Mask
 from nifti_overlay.multiimage import CheckerBoard, MultiImage
 
 class NiftiOverlay:
+    """The main tool of the package, which creates tiled plots of one or more NIFTI images.
+    """
 
-    def __init__(self, planes='xyz', nslices=7, transpose=False, min_all=None,
-                 max_all=None, minx=0.15, maxx=0.85, miny=0.15, maxy=0.85,
-                 minz=0.15, maxz=0.85, background='black',
-                 figsize='automatic', dpi=200, verbose=False):
+    def __init__(
+            self,
+            planes: str = 'xyz',
+            nslices: int = 7,
+            transpose: bool = False,
+            min_all: None | float = None,
+            max_all: None | float = None,
+            minx: float = 0.15,
+            maxx: float = 0.85,
+            miny: float = 0.15,
+            maxy: float = 0.85,
+            minz: float = 0.15,
+            maxz: float = 0.85,
+            background: str = 'black',
+            figsize: Tuple | str = 'automatic',
+            dpi: int = 200,
+            verbose: bool = False
+            ):
+        """Initialize a NiftiOverlay object.
+
+        Parameters
+        ----------
+        planes : str, optional
+            String specifying the number of rows being plotted, and the dimension of the
+            image being plotted on each row.  The length of the string indicates the number
+            of rows being plotted, and the specific characters indicate the image dimensions
+            being plotted ("x", "y", or "z") and their order.  Characters can be repeated
+            or omitted.
+        nslices : int, optional
+            Integer specifying the number of slices to plot per plane, by default 7.
+        transpose : bool, optional
+            Make the overlay have shape [slices, planes] instead of [planes, slices], by default False.
+        min_all : None | float, optional
+            Proportion specifying the minimum extent of the image dimension over which to sample slices,
+            by default None, in which case the minx, miny, and minz parameters are used.
+        max_all : None | float, optional
+            Proportion specifying the maximum extent of the image dimension over which to sample slices,
+            by default None, in which case the minx, miny, and minz parameters are used.
+        minx : float, optional
+            Minimum slice sampling limit (proportion) in the x dimension, by default 0.15
+        maxx : float, optional
+            Maximum slice sampling limit (proportion) in the x dimension, by default 0.85
+        miny : float, optional
+            Minimum slice sampling limit (proportion) in the y dimension, by default 0.15
+        maxy : float, optional
+            Maximum slice sampling limit (proportion) in the y dimension, by default 0.85
+        minz : float, optional
+            Minimum slice sampling limit (proportion) in the z dimension, by default 0.15
+        maxz : float, optional
+            Maximum slice sampling limit (proportion) in the z dimension, by default 0.85
+        background : str, optional
+            Color passed to matplotlib which sets the background color of panels, by default 'black'
+        figsize : Tuple | str, optional
+            Figure size, by default 'automatic', which provides a standard setting.  Otherwise,
+            a 2-tuple can be passed specifying the figure dimensions in inches.
+        dpi : int, optional
+            Figure DPI, by default 200
+        verbose : bool, optional
+            Report progress while generating overlays, by default False
+        """
 
         # user-supplied attributes
         self.planes = planes
@@ -54,14 +113,25 @@ class NiftiOverlay:
 
     @property
     def nrows(self):
+        """Number of rows of panels that will be plotted."""
         return len(self.planes) if not self.transpose else self.nslices
 
     @property
     def ncols(self):
+        """Number of columns of panels that will be plotted."""
         return  self.nslices if not self.transpose else len(self.planes)
 
     @property
     def paddings(self):
+        """Get the slice sampling extent in each dimension.
+
+        Returns
+        -------
+        dict
+            Dictionary with keys "x", "y", and "z".  For each, the
+            value are the slice sampling limits provided as a 2-tuple
+            (minimum, maximum).
+        """
 
         minx = self.minx
         miny = self.miny
@@ -84,9 +154,45 @@ class NiftiOverlay:
         return paddings
 
 
-    def add_anat(self, src, color='gist_gray', alpha=1,
-                 scale_panel=False, drop_zero=False, vmin=None,
-                 vmax=None):
+    def add_anat(
+            self,
+            src: str | pathlib.Path | nib.Nifti1Image,
+            color='gist_gray',
+            alpha=1,
+            scale_panel=False,
+            drop_zero=False,
+            vmin=None,
+            vmax=None
+            ) -> Anatomy:
+        """Add an anatomical image to be plotted.  This is typically
+        a continuously value image which will be represented with a
+        continuous colormap.
+
+        Parameters
+        ----------
+        src : str | pathlib.Path | nib.Nifti1Image
+            Source image.
+        color : str, optional
+            Colormap key from matplotlib. The default is 'gist_gray'.
+        alpha : float, optional
+            Color transparency. The default is 1.0.
+        scale_panel : bool, optional
+            When plotting, scale the colormap to be the extent of intensities observed
+            in each individual panel, rather than across the whole 3D volume.
+            Can be used to maximize the dynamic range within each panel, but
+            makes comparisons across panels more difficult. The default is False.
+        drop_zero : bool, optional
+            Don't plot voxels which have a value of zero. The default is False.
+        vmin : float | None, optional
+            Bottom limit of color range. The default is None.
+        vmax : float | None, optional
+            Top limit of color range. The default is None.
+
+        Returns
+        -------
+        nifti_overlay.image.Anatomy
+            Object for managing the image being plotted.
+        """
         img = Anatomy(src=src, color=color, alpha=alpha,
                       scale_panel=scale_panel, drop_zero=drop_zero,
                       vmin=vmin, vmax=vmax)
@@ -99,10 +205,41 @@ class NiftiOverlay:
                            alpha=alpha, normalize=normalize,
                            histogram_matching=histogram_matching)
         self.images.append(img)
-        return img
+        return img 
 
-    def add_edges(self, src, color='yellow', alpha=1.0, sigma=1.0):
-        img = Edges(src=src, color=color, alpha=alpha, sigma=sigma)
+    def add_edges(
+            self,
+            src: str | pathlib.Path | nib.Nifti1Image,
+            color: str='yellow',
+            alpha: float=1.0, 
+            sigma: float=1.0,
+            interpolation: str='none',
+            ) -> Edges:
+        """Add an edges image to be plotted.  The contours/edges
+        of each slice are automatically detected.
+
+        Parameters
+        ----------
+        src : str path, pathlib.Path, or nibabel.Nifti1Image
+            Source image.
+        color : str, RGB, RGBA, optional
+            Color understood by matplotlib. The default is 'yellow'.
+        alpha : float, optional
+            Color transparency. The default is 1.0.
+        sigma : float, optional
+            Standard deviation of the Gaussian filter of the Canny edge detector.
+            The default is 1.0.  See `skimage.feature.canny`.
+        interpolation : str, optional
+            Type of interpolation for plotting images. The default is 'none'.
+            See matplotlib for more details (`plt.imshow`).
+
+        Returns
+        -------
+        Edges
+            Object for managing the image being plotted.
+        """
+
+        img = Edges(src=src, color=color, alpha=alpha, sigma=sigma, interpolation=interpolation)
         self.images.append(img)
         return img
 

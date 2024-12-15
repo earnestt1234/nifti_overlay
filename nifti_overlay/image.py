@@ -1,9 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Thu Sep 12 15:16:34 2024
-
-@author: earnestt1234
+Classes for overlays generating plot data from single image files.
 """
 
 from abc import ABC, abstractmethod
@@ -16,9 +14,10 @@ import numpy as np
 from skimage import feature
 
 class Image(ABC):
-    """Generic, abstract class for representing a single image to plot"""
+    """Generic, abstract class for representing a single image to plot.
+    **This is an abstract class, and should not be used directly.**"""
 
-    def __init__(self, src):
+    def __init__(self, src: str | pathlib.Path | nib.Nifti1Image):
         """
 
         Parameters
@@ -68,14 +67,14 @@ class Image(ABC):
         """Tuple specifying the length of each dimension."""
         return self.nifti.header.get_data_shape()
 
-    def aspect(self, dimension):
+    def aspect(self, dimension: int):
         """For a given dimension (int[0-2]), get the aspect ratio as indicated by the voxel size."""
         voxel_dims = list(self.nifti.header["pixdim"][1:4])
         del voxel_dims[dimension]
         x, y = voxel_dims
         return y/x
 
-    def dimension_shape(self, dimension):
+    def dimension_shape(self, dimension: int):
         """For a given dimension (int[0-2]), get the size of the remaining 2 dimensions.
         When plotting over a given dimension/axis, the image shape will be what is returned here."""
         tmp = list(self.shape)
@@ -84,12 +83,17 @@ class Image(ABC):
         return rot90
 
     @abstractmethod
-    def plot_slice(self, dimension, position, ax=None, **kwargs):
+    def plot_slice(
+        self,
+        dimension: int,
+        position: int,
+        ax: matplotlib.axes.Axes | None,
+        **kwargs):
         """Plot a 2D slice from one axis (`dimension`) at a given depth (`position`)."""
         ...
 
     @abstractmethod
-    def get_slice(self, dimension, position):
+    def get_slice(self, dimension: int, position: int):
         """Return the data for a 2D slice from one axis (`dimension`) at a given depth (`position`)."""
         ...
 
@@ -97,20 +101,27 @@ class Anatomy(Image):
     """Class for plotting anatomical images, where the voxel values are typically
     continuous and should be plotted with a colormap."""
 
-    def __init__(self, src, color='gist_gray', alpha=1,
-                 scale_panel=False, drop_zero=False, vmin=None,
-                 vmax=None):
+    def __init__(
+            self,
+            src: str | pathlib.Path | nib.Nifti1Image,
+            color: str = 'gist_gray',
+            alpha: float = 1.0,
+            scale_panel: bool = False,
+            drop_zero: bool = False,
+            vmin: float | None = None,
+            vmax: float | None = None
+            ):
         """
         Instantiate an Anatomy image.
 
         Parameters
         ----------
-        src : str path, pathlib.Path, or nibabel.Nifti1Image
+        src : str | pathlib.Path | nib.Nifti1Image
             Source image.
         color : str, optional
             Colormap key from matplotlib. The default is 'gist_gray'.
         alpha : float, optional
-            Color transparency. The default is 1.
+            Color transparency. The default is 1.0.
         scale_panel : bool, optional
             When plotting, scale the colormap to be the extent of intensities observed
             in each individual panel, rather than across the whole 3D volume.
@@ -118,9 +129,9 @@ class Anatomy(Image):
             makes comparisons across panels more difficult. The default is False.
         drop_zero : bool, optional
             Don't plot voxels which have a value of zero. The default is False.
-        vmin : float, optional
+        vmin : float | None, optional
             Bottom limit of color range. The default is None.
-        vmax : float, optional
+        vmax : float | None, optional
             Top limit of color range. The default is None.
 
         Returns
@@ -136,12 +147,23 @@ class Anatomy(Image):
         self.vmin = vmin
         self.vmax = vmax
 
-    def get_slice(self, dimension, position):
-        """Return the data for a 2D slice from one axis (`dimension`) at a given depth (`position`).
+    def get_slice(self, dimension: int, position: int):
+        """Return the data to be plotted for a given slice. The data returned are the
+        raw intensities of a slice through the 3D volume. 
+        If ``drop_zero`` is specified, the zero values with be replaced with NaN.
 
-        The data returned are the raw intensities of a slice through the 3D
-        volume.  If `drop_zero` is specified, the zero values with be replaced
-        with NaN."""
+        Parameters
+        ----------
+        dimension : int
+            Image dimension to plot over (0 for x, 1 for y, 2 for z).
+        position : int
+            Index of the slice to plot.
+
+        Returns
+        -------
+        numpy array
+            Imaging slice data.
+        """
 
         data = self.data
 
@@ -152,8 +174,24 @@ class Anatomy(Image):
         xsect = np.rot90(np.take(data, indices=position, axis=dimension))
         return xsect
 
-    def plot_slice(self, dimension, position, ax=None, **kwargs):
-        """Plot a 2D slice from one axis (`dimension`) at a given depth (`position`)."""
+    def plot_slice(self, dimension: int, position: int, ax: matplotlib.axes.Axes | None = None, **kwargs):
+        """Plot the data for a given slice.
+
+        Parameters
+        ----------
+        dimension : int
+            Image dimension to plot over (0 for x, 1 for y, 2 for z).
+        position : int
+            Index of the slice to plot.
+        ax : None | matplotlib.axes.Axes, optional
+            Matplotlib axes to plot on, by default None, in which case
+            ``plt.gca()`` is used.
+
+        Returns
+        -------
+        matplotlib axes
+            Axes after plotting.
+        """
 
         data = self.data.copy()
 
@@ -183,7 +221,14 @@ class Edges(Image):
     """Class for plotting the contours/edges (automatically detected)
     of a slice."""
 
-    def __init__(self, src, color='yellow', alpha=1.0, sigma=1.0, interpolation='none'):
+    def __init__(
+            self,
+            src: str | pathlib.Path | nib.Nifti1Image,
+            color: str='yellow',
+            alpha: float=1.0,
+            sigma: float=1.0,
+            interpolation: str='none'
+            ):
         """
         Instantiate an Edges image.
 
