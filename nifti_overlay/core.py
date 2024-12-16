@@ -227,7 +227,7 @@ class NiftiOverlay:
             plotted, by default True.  As one colormap is applied to all images, this can
             be good to make sure all images are visible.  May not be necessary if the images are
             all coming in with the same dynamic range.
-        
+
 
         Returns
         -------
@@ -238,13 +238,13 @@ class NiftiOverlay:
                            alpha=alpha, normalize=normalize,
                            histogram_matching=histogram_matching)
         self.images.append(img)
-        return img 
+        return img
 
     def add_edges(
             self,
             src: str | pathlib.Path | nib.Nifti1Image,
             color: str='yellow',
-            alpha: float=1.0, 
+            alpha: float=1.0,
             sigma: float=1.0,
             interpolation: str='none',
             ) -> Edges:
@@ -278,8 +278,8 @@ class NiftiOverlay:
     def add_mask(
             self,
             src: str | pathlib.Path | nib.Nifti1Image,
-            color: str='red',
-            alpha: float=1.0, 
+            color: str | None = None,
+            alpha: float=1.0,
             mask_value: float=1.0,
             ) -> Mask:
         """Add a mask to be plotted; a binary image plotted with a single
@@ -289,8 +289,9 @@ class NiftiOverlay:
         ----------
         src : str path, pathlib.Path, or nibabel.Nifti1Image
             Source image.
-        color : str, RGB, RGBA, optional
-            Color understood by matplotlib. The default is 'red'.
+        color : str, RGB, RGBA, None, optional
+            Color understood by matplotlib. The default is None, in which
+            case the default color cycle is used.
         alpha : float, optional
             Color transparency. The default is 1.0.
         mask_value : int or float, optional

@@ -39,6 +39,9 @@ Example uses:
     - Creating a checkerboard showing registration alignment.
     - Displaying edges of one image overlaid on another.
 
+By defauly, images are shown with matplotlib.  Use the output option (-o)
+to save them to a file.
+
 Requirments
 ~~~~~~~~~~~
     - Python 3
@@ -56,27 +59,28 @@ Usage
 General:
     nifti_overlay \\
         ([-A anatomy] [anatomy options])\\
-        ([-M] [mask options]) \\
-        ([-C] [checker options]) \\
+        ([-E edges] [edge options]) \\
+        ([-M mask] [mask options]) \\
+        ([-C checkerboard1 checkerboard2 ...] [checker options]) \\
         [global options]
 
 Plot an anatomical image:
-    nifti_overlay -A t1.nii.gz -o my_img.png
+    nifti_overlay -A t1.nii.g
 
 Set the dimensions plotted and number of slices (only X & Y axes, 10 slices each):
-    nifti_overlay -A t1.nii.gz -x 'xy' -n 10 -o my_img.png
+    nifti_overlay -A t1.nii.gz -x 'xy' -n 10
 
 Set the proportions of the image to plot:
-    nifti_overlay -A t1.nii.gz -min .3 -max 1.0 -o my_img.png
+    nifti_overlay -A t1.nii.gz -min .3 -max 1.
 
 Plot a mask over an anatomical image:
-    nifti_overlay -A t1.nii.gz -M mask.nii.gz -c 'red' -a 0.3 -o my_img.png
+    nifti_overlay -A t1.nii.gz -M mask.nii.gz -c 'red' -a 0.
 
 Plot a PET image over a T1:
-    nifti_overlay -A t1.nii.gz -A pet_registered.nii.gz -c jet -a 0.5 -o my_img.png
+    nifti_overlay -A t1.nii.gz -A pet_registered.nii.gz -c jet -a 0.
 
 Plot an image in the default layout of FSLEYES:
-    nifti_overlay -A img.nii.gz -T -n 1 -o my_img.png
+    nifti_overlay -A img.nii.gz -T -n 1
 
 Plot a checkerboard image:
     nifti_overlay -C registered.nii.gz moving.nii.gz
@@ -172,8 +176,8 @@ These arguments affect all images.
         for usuable extension.  If -S / --separate is passed, the output is instead
         a path to folder to save images within.
 
-    -P / --plot OUTPUT
-        Show the plot interactively with matplotlib.
+    -P / --plot
+        Show the plot interactively with matplotlib even when writing to file.
 
     -x / --axes AXES
         Axis letters indicating which axes to plot and in what order.
@@ -435,15 +439,12 @@ def main(arguments=None, debug=False):
     if args.help:
         print(helptxt)
         return
-
-    # no output specified
-    elif (args.output is None) and (not args.plot) and (not DEBUG):
-        raise ValueError("Either output (-o) must be specified or the plot (-P) "
-                         "option must be passed.  Run `nifti_overlay -h` for help.")
-
-    if not args.plot:
+    
+    # set matplotlib mode
+    show_plot = (args.output is None) or args.plot
+    if not show_plot:
         matplotlib.use('Agg')
-
+        
     # parse some args
     figsize = args.figx, args.figy
     if figsize == (None, None):
@@ -484,7 +485,7 @@ def main(arguments=None, debug=False):
     _ = overlay.plot()
 
     # handle outputs
-    if args.plot:
+    if show_plot:
         plt.show()
 
     if args.output:
