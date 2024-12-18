@@ -11,11 +11,12 @@ files in NIFTI format.
 
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
    :caption: Contents:
 
    installation
    usage_cli
    usage_python
+   gallery
    api
 
