@@ -104,7 +104,7 @@ IMAGES
     -C / --checker ANATOMY1, ANATOMY2, ...
         Paths to multiple images to checker together.
 
-    -E / EDGES
+    -E / --edges EDGES
         Path to an image to plot.  An edge detector is applied to create an edge image.
 
     -M / --mask MASK
