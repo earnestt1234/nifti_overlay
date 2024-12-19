@@ -364,8 +364,8 @@ class Mask(Image):
         numpy array
             Imaging slice data.
         """
-        data = np.where(self.data == self.mask_value, 1, np.nan)
-        data = np.ma.array(data, mask=np.isnan(data)).data
+        data = np.where(self.data == self.mask_value, 1., np.nan)
+        # data = np.ma.array(data, mask=np.isnan(data)).data
         xsect = np.rot90(np.take(data, indices=position, axis=dimension))
         return xsect
 

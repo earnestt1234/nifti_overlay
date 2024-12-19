@@ -325,7 +325,7 @@ def parse(args=None):
     parser.add_argument('--interpolation', action=StoreValueInOrder)
 
     # IMAGE OPTIONS (MASK)
-    parser.add_argument('-m', '--maskvalue', action=StoreValueInOrder)
+    parser.add_argument('-m', '--mask-value', action=StoreValueInOrder, dest='mask_value')
 
     # GLOBALS
     parser.add_argument('-h', '--help', action='store_true')
