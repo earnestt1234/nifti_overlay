@@ -1,4 +1,6 @@
 
+.. _usage_cli:
+
 Usage: Command Line
 ===================
 
@@ -10,7 +12,7 @@ command line interface (CLI) like so:
 
     nifti_overlay -h
 
-The source code for the CLI can be viewed `here <https://github.com/earnestt1234/nifti_overlay/blob/main/nifti_overlay/__main__.py>`_.
+The source code for the CLI can be viewed `here <https://github.com/earnestt1234/nifti_overlay/blob/main/nifti_overlay/__main__.py>`__.
 
 Basic Usage
 -----------
@@ -63,10 +65,10 @@ See the help docstring for a full list of image-specific and global options.
 Outputs
 -------
 
-By default, any created visualizations are shown in an `interactive matplotlib window <https://matplotlib.org/stable/users/explain/figure/interactive.html>`_.  After closing this display, the program exits and the image is not saved (although the interactive viewer can be used to save the image).
+By default, any created visualizations are shown in an `interactive matplotlib window <https://matplotlib.org/stable/users/explain/figure/interactive.html>`__.  After closing this display, the program exits and the image is not saved (although the interactive viewer can be used to save the image).
 
 To save the image to file, specify the ``-o``/``--output`` argument with a path
-to an image (see `here <https://stackoverflow.com/a/7608273/13386979>`_ for a discussion of acceptable image formats).
+to an image (see `here <https://stackoverflow.com/a/7608273/13386979>`__ for a discussion of acceptable image formats).
 
 .. code-block:: bash
 
