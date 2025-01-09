@@ -12,7 +12,7 @@ dependencies = [
     "scikit-image>=0.24.0"
 ]
 dynamic = ["version"]
-requires-python = ">= 3.7"
+requires-python = ">= 3.10"
 authors =[
     {name = "Tom Earnest", email = "earnestt1234@gmail.com"}
 ]

@@ -20,7 +20,7 @@ dependencies = [
 
 setup(name='nifti_overlay',
       version=version,
-      python_requires='>=3.7',
+      python_requires='>=3.10',
       description='A program for creating tiled images of volumetric neuorimaging data.',
       url='https://github.com/earnestt1234/nifti_overlay',
       author='Tom Earnest',
