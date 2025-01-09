@@ -1,0 +1,58 @@
+# DERIVED FROM: https://realpython.com/github-actions-python
+
+# human readable name (shows up on Github)
+name: Run unit tests
+
+# Defines when this workflow is triggered
+# on pushed commits to the main branch
+# on pull requests to main
+# workflow_call: lets other workflows call this one
+# workflow_dispatch: manual triggering
+on:
+  push:              
+    branches:
+      - master
+  pull_request:      
+    branches:
+      - master
+  workflow_call:     
+  workflow_dispatch: 
+
+# Defines the tasks to be completed
+jobs:
+
+  # Defines a "testing" job
+  # runs-on: VM it is executed on
+  # strategy: allows for generation of multiple jobs (testing each Python version)
+  testing: 
+    runs-on: ubuntu-latest 
+    strategy: 
+      matrix:
+        python-version: ["3.7", "3.8", "3.9", "3.10", "3.11", "3.12", "3.13"]
+    
+    # Defines the actual steps to accomplish as part of the "testing" job
+    steps:
+      - uses: actions/checkout@v4 # checkout the github branch
+
+      # Sets up Python, accesising the matrix defined above
+      # to get a specific Python version
+      # adding name here allows Python version to be documented
+      - name: Set up Python ${{ matrix.python-version }} 
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: "pip"
+      
+      # Installs the code to be tested, and pytest
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install .
+          python -m pip install pytest
+      
+      # Runs pytest
+      - name: Run Pytest
+        run: pytest
+
+  
+    
